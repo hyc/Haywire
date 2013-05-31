@@ -30,7 +30,6 @@
 static uv_loop_t* uv_loop;
 static uv_tcp_t server;
 static http_parser_settings parser_settings;
-static uv_buf_t resbuf;
 
 rxt_node *routes = NULL;
 
@@ -135,14 +134,15 @@ int http_server_write_response(http_parser *parser, char *response)
 {
     int r;
     http_request_context *context = (http_request_context *)parser->data;
-    uv_write_t* write_req = (uv_write_t *)malloc(sizeof(*write_req));
+    uv_write_t* write_req = (uv_write_t *)malloc(sizeof(*write_req) + sizeof(uv_buf_t));
+	uv_buf_t *resbuf = (uv_buf_t *)(write_req+1);
 
-	resbuf.base = response;
-	resbuf.len = strlen(response) + 1;
+	resbuf->base = response;
+	resbuf->len = strlen(response) + 1;
 
     write_req->data = parser->data;
 
-    r = uv_write(write_req, (uv_stream_t*)&context->stream, &resbuf, 1, http_server_after_write);	
+    r = uv_write(write_req, (uv_stream_t*)&context->stream, resbuf, 1, http_server_after_write);	
 
     return 0;
 }

@@ -101,6 +101,14 @@ int http_request_on_message_complete(http_parser* parser)
     {
         response = callback(context->request);
         http_server_write_response(parser, response);	
+		if (context->request != NULL)
+		{
+			free(context->request->url);
+			free(context->request->body);
+			rxt_free((rxt_node *)context->request->headers);
+			free(context->request);
+			context->request = NULL;
+		}
     }
     else
     {
